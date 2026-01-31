@@ -1,0 +1,374 @@
+{
+	"info": {
+		"_postman_id": "bengkel-booking-system-collection",
+		"name": "Bengkel Booking System API",
+		"description": "Collection untuk testing fungsi Bengkel Booking System (Hybrid Monolithic + Internal API)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Login Process",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "email",
+									"value": "budi@email.com",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "customer123",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/proses-login.php",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"proses-login.php"
+							]
+						},
+						"description": "Form Handler for User Login. Returns 302 Redirect on success."
+					},
+					"response": []
+				},
+				{
+					"name": "Register Process",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "nama",
+									"value": "New User",
+									"type": "text"
+								},
+								{
+									"key": "email",
+									"value": "newuser@email.com",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "password123",
+									"type": "text"
+								},
+								{
+									"key": "konfirmasi_password",
+									"value": "password123",
+									"type": "text"
+								},
+								{
+									"key": "role",
+									"value": "customer",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/proses-register.php",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"proses-register.php"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Services (Internal API)",
+			"item": [
+				{
+					"name": "Get All Services",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/ajax/get-layanan.php",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"ajax",
+								"get-layanan.php"
+							]
+						},
+						"description": "Returns JSON list of active services."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Service Detail",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/ajax/get-layanan.php?id=1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"ajax",
+								"get-layanan.php"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Returns JSON detail for a specific service ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Check Live Price",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/ajax/cek-harga.php?layanan[]=1&layanan[]=3",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"ajax",
+								"cek-harga.php"
+							],
+							"query": [
+								{
+									"key": "layanan[]",
+									"value": "1"
+								},
+								{
+									"key": "layanan[]",
+									"value": "3"
+								}
+							]
+						},
+						"description": "Calculates total price and duration for selected services via AJAX."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Booking",
+			"item": [
+				{
+					"name": "Check Time Slots (Internal API)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/ajax/cek-slot-waktu.php?tanggal=2026-02-01",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"ajax",
+								"cek-slot-waktu.php"
+							],
+							"query": [
+								{
+									"key": "tanggal",
+									"value": "2026-02-01"
+								}
+							]
+						},
+						"description": "Returns available slots for a given date in JSON."
+					},
+					"response": []
+				},
+				{
+					"name": "Submit Booking",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "kendaraan_id",
+									"value": "1",
+									"type": "text"
+								},
+								{
+									"key": "tanggal_booking",
+									"value": "2026-02-01",
+									"type": "text"
+								},
+								{
+									"key": "jam_booking",
+									"value": "08:00",
+									"type": "text"
+								},
+								{
+									"key": "keluhan",
+									"value": "Bunyi kasar mesin",
+									"type": "text"
+								},
+								{
+									"key": "layanan[]",
+									"value": "1",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/customer/proses-booking.php",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"customer",
+								"proses-booking.php"
+							]
+						},
+						"description": "Handles booking submission. Requires valid session."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Status (Admin)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "booking_id",
+									"value": "1",
+									"type": "text"
+								},
+								{
+									"key": "status",
+									"value": "dikerjakan",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/ajax/update-status.php",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"ajax",
+								"update-status.php"
+							]
+						},
+						"description": "Admin endpoint to update booking status. Returns JSON."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Vehicles",
+			"item": [
+				{
+					"name": "Add Vehicle",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "merk",
+									"value": "Honda",
+									"type": "text"
+								},
+								{
+									"key": "tipe",
+									"value": "Civic",
+									"type": "text"
+								},
+								{
+									"key": "tahun",
+									"value": "2022",
+									"type": "text"
+								},
+								{
+									"key": "plat_nomor",
+									"value": "B 9999 AA",
+									"type": "text"
+								},
+								{
+									"key": "warna",
+									"value": "Hitam",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/customer/proses-kendaraan.php",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"customer",
+								"proses-kendaraan.php"
+							]
+						},
+						"description": "Adds a new vehicle for the logged-in user."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Vehicle (Soft Delete)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/customer/hapus-kendaraan.php?id=1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"customer",
+								"hapus-kendaraan.php"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Performs soft delete on vehicle."
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		}
+	]
+}
