@@ -7,12 +7,7 @@ class ServiceController {
     }
 
     public function index() {
-        // Admin might want to see all services, public only active. 
-        // For now returns all for admin simplicity or filtered if public.
-        // Let's return all and let frontend filter or just return all active for now.
-        // Actually, `hapus-layanan` implies hard delete, so maybe no status column usage or we just list everything.
-        // The original code `dashboard.php` or `layanan.php` might show. 
-        // Let's assume list all.
+
         $stmt = $this->pdo->query("SELECT * FROM tb_master_layanan ORDER BY nama_layanan");
         $services = $stmt->fetchAll(PDO::FETCH_ASSOC);
         Response::json(['data' => $services], 200);
@@ -51,7 +46,7 @@ class ServiceController {
 
     public function update($id) {
         $input = json_decode(file_get_contents('php://input'), true);
-        
+
         try {
             $stmt = $this->pdo->prepare("UPDATE tb_master_layanan SET nama_layanan = ?, deskripsi = ?, harga = ?, durasi_menit = ?, status = ? WHERE id = ?");
             $stmt->execute([
@@ -70,7 +65,7 @@ class ServiceController {
 
     public function delete($id) {
         try {
-            // Check usage
+
             $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM tb_booking_layanan WHERE layanan_id = ?");
             $stmt->execute([$id]);
             if ($stmt->fetchColumn() > 0) {

@@ -9,15 +9,13 @@ class SettingsController {
 
     public function index() {
         try {
-            // Hours
+
             $stmt = $this->pdo->query("SELECT * FROM tb_jam_operasional ORDER BY FIELD(hari, 'senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu', 'minggu')");
             $jam_operasional = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            // Slots
             $stmt = $this->pdo->query("SELECT * FROM tb_slot_waktu ORDER BY jam_mulai");
             $slot_waktu = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            // Holidays
             $stmt = $this->pdo->query("SELECT * FROM tb_tanggal_libur WHERE tanggal >= CURDATE() ORDER BY tanggal");
             $tanggal_libur = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -71,7 +69,7 @@ class SettingsController {
 
             foreach ($input as $row) {
                 $id = $row['id'];
-                $status = $row['status']; // 'aktif' or 'nonaktif'
+                $status = $row['status'];
                 $kapasitas = $row['kapasitas'];
 
                 $stmt = $this->pdo->prepare("UPDATE tb_slot_waktu SET status = ?, kapasitas = ? WHERE id = ?");

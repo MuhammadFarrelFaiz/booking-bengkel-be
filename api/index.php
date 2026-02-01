@@ -1,19 +1,16 @@
 <?php
 session_start();
 
-// be/api/index.php
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../includes/db.php';
 
-// Response Helper
 class Response {
     public static function json($data, $code = 200) {
         http_response_code($code);
         header('Content-Type: application/json');
-        
+
         $status = $data['status'] ?? ($code >= 200 && $code < 300 ? 'success' : 'error');
-        
-        // Default messages mapping (Indonesian)
+
         $defaultMessages = [
             200 => 'Permintaan berhasil diproses',
             201 => 'Data berhasil dibuat',
@@ -32,7 +29,7 @@ class Response {
             'status' => $status,
             'message' => $data['message'] ?? $fallbackMessage,
         ];
-        
+
         if (is_array($data)) {
             $response = array_merge($response, $data);
         } else {
@@ -48,7 +45,6 @@ class Response {
     }
 }
 
-// CORS Headers
 $origin = $_SERVER['HTTP_ORIGIN'] ?? 'http://localhost:8080';
 header("Access-Control-Allow-Origin: $origin");
 header('Access-Control-Allow-Credentials: true');
@@ -60,13 +56,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-// Global Auth Check
 $publicRoutes = [
-    'services' => ['GET'], // Public can view services
-    'auth' => ['POST']     // Login/Register
+    'services' => ['GET'],
+    'auth' => ['POST']
 ];
 
-// Determine if public
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $parts = explode('/', trim($uri, '/'));
 $apiIndex = array_search('api', $parts);
@@ -78,48 +72,43 @@ $id = null;
 if ($apiIndex !== false) {
     $resource = $parts[$apiIndex + 1] ?? '';
     $action = $parts[$apiIndex + 2] ?? '';
-    $id = $parts[$apiIndex + 3] ?? null; // Assuming ID is the third segment after resource
+    $id = $parts[$apiIndex + 3] ?? null;
 
     $method = $_SERVER['REQUEST_METHOD'];
 
     $isPublic = false;
-    // Check if the resource is explicitly public for the given method
+
     if (isset($publicRoutes[$resource]) && in_array($method, $publicRoutes[$resource])) {
         $isPublic = true;
     }
-    // Special case for auth/logout, which requires a session
+
     if ($resource === 'auth' && $action === 'logout') {
         $isPublic = false;
     }
-
 
     if (!$isPublic) {
         if (!isset($_SESSION['user_id'])) {
             Response::error('Unauthorized', 401);
         }
 
-        // Admin checks
         $role = $_SESSION['role'] ?? '';
         $adminResources = ['customers', 'settings', 'reports', 'dashboard'];
-        
+
         if ($role !== 'admin' && in_array($resource, $adminResources)) {
-            // Exception for dashboard: customers can access 'dashboard/customer'
+
             if ($resource === 'dashboard' && $action === 'customer' && $role === 'customer') {
-                // Allowed
+
             } else {
                 Response::error('Forbidden', 403);
             }
         }
-        
-        // Service modification check
+
         if ($resource === 'services' && $method !== 'GET' && $role !== 'admin') {
             Response::error('Forbidden', 403);
         }
-        
-        // Booking modification check (update status)
+
         if ($resource === 'bookings' && $role !== 'admin') {
-             // Customers can only CREATE (POST) or list (GET) their own.
-             // Update status (POST /update-status) is admin only.
+
              if ($method === 'POST' && $action === 'update-status') {
                  Response::error('Forbidden', 403);
              }
@@ -127,12 +116,8 @@ if ($apiIndex !== false) {
     }
 }
 
-
-
-// Simple Router
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
-// Normalize URI: Remove project folder prefixes to get clean resource path
 $prefixes = ['/booking-bengkel-be/api/', '/be/api/', '/api/'];
 foreach ($prefixes as $prefix) {
     if (strpos($uri, $prefix) === 0) {
@@ -147,7 +132,6 @@ $resource = $segments[0] ?? '';
 $action = $segments[1] ?? '';
 $id = $segments[2] ?? null;
 
-// Routing Logic
 switch ($resource) {
     case 'auth':
         require_once __DIR__ . '/../controllers/AuthController.php';
@@ -167,20 +151,20 @@ switch ($resource) {
         else Response::error('Endpoint not found', 404);
         break;
 
-    case 'kendaraan':
-        require_once __DIR__ . '/../controllers/KendaraanController.php';
-        $controller = new KendaraanController($pdo);
+    case 'mobil':
+        require_once __DIR__ . '/../controllers/MobilController.php';
+        $controller = new MobilController($pdo);
         $method = $_SERVER['REQUEST_METHOD'];
 
         if ($method === 'GET') {
-            if ($action) $controller->show($action); // $action is ID here if present
+            if ($action) $controller->show($action);
             else $controller->index();
         } elseif ($method === 'POST') {
             $controller->store();
         } elseif ($method === 'PUT') {
-            $controller->update($action); // $action is ID
+            $controller->update($action);
         } elseif ($method === 'DELETE') {
-            $controller->destroy($action); // $action is ID
+            $controller->destroy($action);
         } else {
             Response::error('Method not allowed', 405);
         }
@@ -190,10 +174,10 @@ switch ($resource) {
         require_once __DIR__ . '/../controllers/DashboardController.php';
         $controller = new DashboardController($pdo);
         if ($action === 'stats') {
-             // Admin Stats
+
              $controller->getStats();
         } elseif ($action === 'customer') {
-             // Customer Dashboard
+
              $controller->getCustomerDashboard();
         } else {
              Response::error('Endpoint not found', 404);
@@ -218,7 +202,7 @@ switch ($resource) {
         }
         else Response::error('Method not allowed', 405);
         break;
-        
+
     case 'booking':
         require_once __DIR__ . '/../controllers/BookingController.php';
         $controller = new BookingController($pdo);
@@ -282,15 +266,12 @@ switch ($resource) {
         }
         break;
 
-
-
     case 'reports':
          require_once __DIR__ . '/../controllers/ReportController.php';
          $controller = new ReportController($pdo);
          if ($_SERVER['REQUEST_METHOD'] === 'GET') $controller->index();
          else Response::error('Method not allowed', 405);
          break;
-
 
     default:
         Response::error('API endpoint not found: ' . $resource, 404);

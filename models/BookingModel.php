@@ -1,9 +1,10 @@
 <?php
-class BookingModel {
+class BookingModel
+{
     private $pdo;
 
-    public function __construct($pdo) {
+    public function __construct($pdo)
+    {
         $this->pdo = $pdo;
     }
-    // Add methods
 }

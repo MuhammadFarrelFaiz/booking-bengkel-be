@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/functions.php';
 
-class KendaraanController {
+class MobilController {
     private $pdo;
 
     public function __construct($pdo) {
@@ -13,11 +13,11 @@ class KendaraanController {
         $user_id = $_SESSION['user_id'] ?? null;
         if (!$user_id) Response::error('Unauthorized', 401);
 
-        $stmt = $this->pdo->prepare("SELECT * FROM tb_kendaraan WHERE user_id = ? AND deleted_at IS NULL ORDER BY created_at DESC");
+        $stmt = $this->pdo->prepare("SELECT * FROM tb_mobil WHERE user_id = ? AND deleted_at IS NULL ORDER BY created_at DESC");
         $stmt->execute([$user_id]);
-        $kendaraan = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $mobil = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        Response::json(['data' => $kendaraan]);
+        Response::json(['data' => $mobil]);
     }
 
     public function store() {
@@ -26,15 +26,14 @@ class KendaraanController {
         if (!$user_id) Response::error('Unauthorized', 401);
 
         $data = json_decode(file_get_contents('php://input'), true);
-        
-        // Validation
+
         if (empty($data['merk']) || empty($data['tipe']) || empty($data['plat_nomor'])) {
             Response::error('Semua field wajib diisi', 400);
         }
 
         try {
             $stmt = $this->pdo->prepare("
-                INSERT INTO tb_kendaraan (user_id, merk, tipe, tahun, warna, plat_nomor)
+                INSERT INTO tb_mobil (user_id, merk, tipe, tahun, warna, plat_nomor)
                 VALUES (?, ?, ?, ?, ?, ?)
             ");
             $stmt->execute([
@@ -46,9 +45,9 @@ class KendaraanController {
                 $data['plat_nomor']
             ]);
 
-            Response::json(['message' => 'Kendaraan berhasil ditambahkan'], 201);
+            Response::json(['message' => 'Mobil berhasil ditambahkan'], 201);
         } catch (PDOException $e) {
-            Response::error('Gagal menambahkan kendaraan: ' . $e->getMessage(), 500);
+            Response::error('Gagal menambahkan mobil: ' . $e->getMessage(), 500);
         }
     }
 
@@ -57,13 +56,13 @@ class KendaraanController {
         $user_id = $_SESSION['user_id'] ?? null;
         if (!$user_id) Response::error('Unauthorized', 401);
 
-        $stmt = $this->pdo->prepare("SELECT * FROM tb_kendaraan WHERE id = ? AND user_id = ? AND deleted_at IS NULL");
+        $stmt = $this->pdo->prepare("SELECT * FROM tb_mobil WHERE id = ? AND user_id = ? AND deleted_at IS NULL");
         $stmt->execute([$id, $user_id]);
-        $kendaraan = $stmt->fetch(PDO::FETCH_ASSOC);
+        $mobil = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if (!$kendaraan) Response::error('Kendaraan tidak ditemukan', 404);
+        if (!$mobil) Response::error('Mobil tidak ditemukan', 404);
 
-        Response::json(['data' => $kendaraan]);
+        Response::json(['data' => $mobil]);
     }
 
     public function update($id) {
@@ -73,19 +72,17 @@ class KendaraanController {
 
         $data = json_decode(file_get_contents('php://input'), true);
 
-        // Validation
         if (empty($data['merk']) || empty($data['tipe']) || empty($data['plat_nomor'])) {
             Response::error('Semua field wajib diisi', 400);
         }
 
-        // Check ownership
-        $stmt = $this->pdo->prepare("SELECT id FROM tb_kendaraan WHERE id = ? AND user_id = ?");
+        $stmt = $this->pdo->prepare("SELECT id FROM tb_mobil WHERE id = ? AND user_id = ?");
         $stmt->execute([$id, $user_id]);
-        if (!$stmt->fetch()) Response::error('Kendaraan tidak ditemukan', 404);
+        if (!$stmt->fetch()) Response::error('Mobil tidak ditemukan', 404);
 
         try {
             $stmt = $this->pdo->prepare("
-                UPDATE tb_kendaraan 
+                UPDATE tb_mobil
                 SET merk = ?, tipe = ?, tahun = ?, warna = ?, plat_nomor = ?
                 WHERE id = ? AND user_id = ?
             ");
@@ -99,9 +96,9 @@ class KendaraanController {
                 $user_id
             ]);
 
-            Response::json(['message' => 'Kendaraan berhasil diupdate']);
+            Response::json(['message' => 'Mobil berhasil diupdate']);
         } catch (PDOException $e) {
-            Response::error('Gagal update kendaraan: ' . $e->getMessage(), 500);
+            Response::error('Gagal update mobil: ' . $e->getMessage(), 500);
         }
     }
 
@@ -110,23 +107,17 @@ class KendaraanController {
         $user_id = $_SESSION['user_id'] ?? null;
         if (!$user_id) Response::error('Unauthorized', 401);
 
-        // Check ownership
-        $stmt = $this->pdo->prepare("SELECT id FROM tb_kendaraan WHERE id = ? AND user_id = ?");
+        $stmt = $this->pdo->prepare("SELECT id FROM tb_mobil WHERE id = ? AND user_id = ?");
         $stmt->execute([$id, $user_id]);
-        if (!$stmt->fetch()) Response::error('Kendaraan tidak ditemukan', 404);
+        if (!$stmt->fetch()) Response::error('Mobil tidak ditemukan', 404);
 
         try {
-            // Soft delete
-            // Check if 'deleted_at' column exists first? 
-            // The previous code used `deleted_at IS NULL`, so I assume it exists.
-            $stmt = $this->pdo->prepare("UPDATE tb_kendaraan SET deleted_at = NOW() WHERE id = ? AND user_id = ?");
+            $stmt = $this->pdo->prepare("UPDATE tb_mobil SET deleted_at = NOW() WHERE id = ? AND user_id = ?");
             $stmt->execute([$id, $user_id]);
-            
-            // Or hard delete if deleted_at is not supported by schema, but query in kendaraan.php used deleted_at.
-            
-            Response::json(['message' => 'Kendaraan berhasil dihapus']);
+
+            Response::json(['message' => 'Mobil berhasil dihapus']);
         } catch (PDOException $e) {
-            Response::error('Gagal menghapus kendaraan: ' . $e->getMessage(), 500);
+            Response::error('Gagal menghapus mobil: ' . $e->getMessage(), 500);
         }
     }
 }

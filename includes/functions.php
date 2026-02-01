@@ -1,12 +1,4 @@
 <?php
-/**
- * Helper Functions untuk Bengkel Booking System
- * Menggunakan prefix tabel: tb_ dan tb_master_
- */
-
-// ==========================================
-// AUTHENTICATION FUNCTIONS
-// ==========================================
 
 function cek_login() {
     if (session_status() === PHP_SESSION_NONE) {
@@ -32,10 +24,6 @@ function cek_customer() {
     }
 }
 
-// ==========================================
-// FORMATTING FUNCTIONS
-// ==========================================
-
 function format_rupiah($angka) {
     return 'Rp ' . number_format($angka, 0, ',', '.');
 }
@@ -56,10 +44,6 @@ function format_datetime($datetime) {
 function format_waktu($time) {
     return date('H:i', strtotime($time));
 }
-
-// ==========================================
-// BOOKING UTILITIES
-// ==========================================
 
 function generate_kode_booking() {
     return 'BK' . date('Ymd') . strtoupper(substr(uniqid(), -4));
@@ -121,32 +105,29 @@ function is_tanggal_libur($pdo, $tanggal) {
 
 function get_slot_tersedia($pdo, $tanggal) {
     $hari = get_hari_dari_tanggal($tanggal);
-    
-    // Check if open on this day
+
     $stmt = $pdo->prepare("SELECT * FROM tb_jam_operasional WHERE hari = ? AND is_buka = 1");
     $stmt->execute([$hari]);
     if (!$stmt->fetch()) {
         return [];
     }
-    
-    // Get all active slots
+
     $stmt = $pdo->query("SELECT * FROM tb_slot_waktu WHERE status = 'aktif' ORDER BY jam_mulai");
     $slots = $stmt->fetchAll();
-    
-    // Get max booking per slot from settings
+
     $stmt = $pdo->query("SELECT max_booking_per_slot FROM tb_pengaturan LIMIT 1");
     $pengaturan = $stmt->fetch();
     $max_per_slot = $pengaturan ? $pengaturan['max_booking_per_slot'] : 3;
-    
+
     $result = [];
     foreach ($slots as $slot) {
-        // Count existing bookings for this slot and date
+
         $stmt = $pdo->prepare("SELECT COUNT(*) FROM tb_booking WHERE tanggal_booking = ? AND jam_booking = ? AND status NOT IN ('dibatalkan')");
         $stmt->execute([$tanggal, $slot['jam_mulai']]);
         $booked = $stmt->fetchColumn();
-        
+
         $available = min($slot['kapasitas'], $max_per_slot) - $booked;
-        
+
         $result[] = [
             'id' => $slot['id'],
             'jam_mulai' => $slot['jam_mulai'],
@@ -155,13 +136,13 @@ function get_slot_tersedia($pdo, $tanggal) {
             'penuh' => $available <= 0
         ];
     }
-    
+
     return $result;
 }
 
 function hitung_total_durasi($pdo, $layanan_ids) {
     if (empty($layanan_ids)) return 0;
-    
+
     $placeholders = str_repeat('?,', count($layanan_ids) - 1) . '?';
     $stmt = $pdo->prepare("SELECT SUM(durasi_menit) FROM tb_master_layanan WHERE id IN ($placeholders)");
     $stmt->execute($layanan_ids);
@@ -170,16 +151,12 @@ function hitung_total_durasi($pdo, $layanan_ids) {
 
 function hitung_total_harga($pdo, $layanan_ids) {
     if (empty($layanan_ids)) return 0;
-    
+
     $placeholders = str_repeat('?,', count($layanan_ids) - 1) . '?';
     $stmt = $pdo->prepare("SELECT SUM(harga) FROM tb_master_layanan WHERE id IN ($placeholders)");
     $stmt->execute($layanan_ids);
     return $stmt->fetchColumn() ?: 0;
 }
-
-// ==========================================
-// GENERAL UTILITIES
-// ==========================================
 
 function show_alert($type, $message) {
     $colors = [
@@ -194,10 +171,10 @@ function show_alert($type, $message) {
         'warning' => 'fa-exclamation-triangle',
         'info' => 'fa-info-circle',
     ];
-    
+
     $color = $colors[$type] ?? $colors['info'];
     $icon = $icons[$type] ?? $icons['info'];
-    
+
     return "<div class='alert-auto-hide border-l-4 p-4 rounded-r-lg mb-4 {$color}'>
                 <div class='flex items-center'>
                     <i class='fas {$icon} mr-3'></i>

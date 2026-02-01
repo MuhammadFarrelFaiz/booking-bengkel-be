@@ -12,12 +12,12 @@ class ReportController {
         $endDate = $_GET['end_date'] ?? date('Y-m-t');
 
         try {
-            // Stats (Total, Selesai, Batal, Pendapatan)
+
             $stmt = $this->pdo->prepare("
-                SELECT 
+                SELECT
                     COUNT(*) as total,
-                    SUM(CASE WHEN status = 'selesai' THEN 1 ELSE 0 END) as selesai,
-                    SUM(CASE WHEN status = 'dibatalkan' THEN 1 ELSE 0 END) as batal,
+                    COALESCE(SUM(CASE WHEN status = 'selesai' THEN 1 ELSE 0 END), 0) as selesai,
+                    COALESCE(SUM(CASE WHEN status = 'dibatalkan' THEN 1 ELSE 0 END), 0) as batal,
                     COALESCE(SUM(CASE WHEN status = 'selesai' THEN total_harga ELSE 0 END), 0) as pendapatan
                 FROM tb_booking
                 WHERE tanggal_booking BETWEEN ? AND ?
@@ -25,7 +25,6 @@ class ReportController {
             $stmt->execute([$startDate, $endDate]);
             $stats = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            // Popular Services
             $stmt = $this->pdo->prepare("
                 SELECT l.nama_layanan, COUNT(*) as jumlah, SUM(bl.harga) as total_harga
                 FROM tb_booking_layanan bl
@@ -39,7 +38,6 @@ class ReportController {
             $stmt->execute([$startDate, $endDate]);
             $popularServices = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            // Response
             Response::json(['status' => 'success', 'data' => [
                 'stats' => $stats,
                 'popular_services' => $popularServices,

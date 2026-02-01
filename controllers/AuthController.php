@@ -9,9 +9,9 @@ class AuthController {
     }
 
     public function login() {
-        // Handle JSON or Form Data
+
         $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
-        
+
         $email = $input['email'] ?? '';
         $password = $input['password'] ?? '';
 
@@ -22,18 +22,17 @@ class AuthController {
         $user = $this->userModel->findByEmail($email);
 
         if ($user && password_verify($password, $user['password'])) {
-            // Start Session (Hybrid approach)
+
             if (session_status() === PHP_SESSION_NONE) session_start();
-            
+
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['role'] = $user['role'];
             $_SESSION['nama'] = $user['nama'];
             $_SESSION['email'] = $user['email'];
 
-            // Determine redirect URL
-            $redirect = $user['role'] === 'admin' 
-                ? 'admin/dashboard.php' 
-                : 'customer/dashboard.php';
+            $redirect = $user['role'] === 'admin'
+                ? '/admin/dashboard.php'
+                : '/customer/dashboard.php';
 
             Response::json([
                 'user' => [
@@ -51,7 +50,6 @@ class AuthController {
     public function register() {
         $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
 
-        // Validation
         if (empty($input['nama']) || empty($input['email']) || empty($input['password'])) {
             Response::error('Semua field wajib diisi');
         }
@@ -61,8 +59,8 @@ class AuthController {
         }
 
         if ($this->userModel->create($input)) {
-             // Optional: Auto login or redirect to login
-             Response::json(['redirect' => 'auth/login.php'], 201, 'Registrasi berhasil');
+
+             Response::json(['redirect' => '/auth/login.php'], 201, 'Registrasi berhasil');
         } else {
             Response::error('Gagal mendaftar, coba lagi', 500);
         }
@@ -71,19 +69,19 @@ class AuthController {
     public function logout() {
         if (session_status() === PHP_SESSION_NONE) session_start();
         session_destroy();
-        Response::json(['redirect' => 'auth/login.php'], 200, 'Logout berhasil');
+        Response::json(['redirect' => '/auth/login.php'], 200, 'Logout berhasil');
     }
 
     public function getProfile() {
         if (session_status() === PHP_SESSION_NONE) session_start();
         $userId = $_SESSION['user_id'] ?? null;
-        
+
         if (!$userId) Response::error('Unauthorized', 401);
-        
+
         $user = $this->userModel->findById($userId);
         if (!$user) Response::error('User not found', 404);
-        
-        unset($user['password']); // Don't send password
+
+        unset($user['password']);
         Response::json(['data' => $user]);
     }
 
@@ -93,8 +91,7 @@ class AuthController {
         if (!$userId) Response::error('Unauthorized', 401);
 
         $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
-        
-        // Allowed fields to update
+
         $data = [
             'nama' => $input['nama'] ?? '',
             'no_hp' => $input['no_hp'] ?? '',
@@ -104,7 +101,7 @@ class AuthController {
         if (empty($data['nama'])) Response::error('Nama tidak boleh kosong');
 
         if ($this->userModel->update($userId, $data)) {
-            $_SESSION['nama'] = $data['nama']; // Update session
+            $_SESSION['nama'] = $data['nama'];
             Response::json(['message' => 'Profil berhasil diperbarui']);
         } else {
             Response::error('Gagal memperbarui profil', 500);
@@ -117,7 +114,7 @@ class AuthController {
         if (!$userId) Response::error('Unauthorized', 401);
 
         $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
-        
+
         $oldPassword = $input['password_lama'] ?? '';
         $newPassword = $input['password_baru'] ?? '';
         $confirmPassword = $input['konfirmasi_password'] ?? '';
@@ -130,8 +127,12 @@ class AuthController {
             Response::error('Konfirmasi password tidak cocok');
         }
 
+        if ($oldPassword === $newPassword) {
+            Response::error('Password baru tidak boleh sama dengan password lama');
+        }
+
         $user = $this->userModel->findById($userId);
-        
+
         if (!password_verify($oldPassword, $user['password'])) {
             Response::error('Password lama salah', 400);
         }

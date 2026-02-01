@@ -46,9 +46,9 @@ CREATE TABLE `tb_master_layanan` (
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 -- =============================================
--- TABEL KENDARAAN
+-- TABEL MOBIL
 -- =============================================
-CREATE TABLE `tb_kendaraan` (
+CREATE TABLE `tb_mobil` (
     `id` int(11) NOT NULL AUTO_INCREMENT,
     `user_id` int(11) NOT NULL,
     `merk` varchar(50) NOT NULL,
@@ -61,7 +61,7 @@ CREATE TABLE `tb_kendaraan` (
     `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
     PRIMARY KEY (`id`),
     KEY `user_id` (`user_id`),
-    CONSTRAINT `tb_kendaraan_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `tb_master_users` (`id`) ON DELETE CASCADE
+    CONSTRAINT `tb_mobil_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `tb_master_users` (`id`) ON DELETE CASCADE
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 -- =============================================
@@ -71,7 +71,7 @@ CREATE TABLE `tb_booking` (
     `id` int(11) NOT NULL AUTO_INCREMENT,
     `kode_booking` varchar(20) NOT NULL UNIQUE,
     `user_id` int(11) NOT NULL,
-    `kendaraan_id` int(11) NOT NULL,
+    `mobil_id` int(11) NOT NULL,
     `tanggal_booking` date NOT NULL,
     `jam_booking` time NOT NULL,
     `keluhan` text DEFAULT NULL,
@@ -88,10 +88,10 @@ CREATE TABLE `tb_booking` (
     `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
     PRIMARY KEY (`id`),
     KEY `user_id` (`user_id`),
-    KEY `kendaraan_id` (`kendaraan_id`),
+    KEY `mobil_id` (`mobil_id`),
     KEY `tanggal_booking` (`tanggal_booking`),
     CONSTRAINT `tb_booking_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `tb_master_users` (`id`) ON DELETE CASCADE,
-    CONSTRAINT `tb_booking_ibfk_2` FOREIGN KEY (`kendaraan_id`) REFERENCES `tb_kendaraan` (`id`) ON DELETE CASCADE
+    CONSTRAINT `tb_booking_ibfk_2` FOREIGN KEY (`mobil_id`) REFERENCES `tb_mobil` (`id`) ON DELETE CASCADE
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 -- =============================================
@@ -259,7 +259,7 @@ VALUES (
     ),
     (
         'Ganti Ban',
-        'Penggantian ban kendaraan (harga belum termasuk ban)',
+        'Penggantian ban mobil (harga belum termasuk ban)',
         50000.00,
         45,
         'aktif'
@@ -420,16 +420,16 @@ INSERT INTO
     )
 VALUES (
         'Bengkel AutoCare',
-        'Jl. Raya Otomotif No. 88, Jakarta Timur',
+        'Jl. Raya Otomotif No. 77, Bandung',
         '021-12345678',
         'info@bengkelautocare.com',
-        'Bengkel terpercaya dengan layanan profesional dan harga bersahabat. Melayani berbagai jenis kendaraan roda 4.',
+        'Bengkel terpercaya dengan layanan profesional dan harga bersahabat. Melayani berbagai jenis mobil.',
         3
     );
 
--- Kendaraan sample
+-- Mobil sample
 INSERT INTO
-    `tb_kendaraan` (
+    `tb_mobil` (
         `user_id`,
         `merk`,
         `tipe`,

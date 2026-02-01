@@ -22,14 +22,13 @@ class CustomerController {
         }
 
         try {
-            // Count total
+
             $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM tb_master_users $where");
             $stmt->execute($params);
             $total = $stmt->fetchColumn();
 
-            // Fetch data
             $stmt = $this->pdo->prepare("
-                SELECT u.*, 
+                SELECT u.*,
                        (SELECT COUNT(*) FROM tb_booking b WHERE b.user_id = u.id) as total_booking,
                        (SELECT COUNT(*) FROM tb_booking b WHERE b.user_id = u.id AND b.status = 'selesai') as booking_selesai
                 FROM tb_master_users u
@@ -58,7 +57,7 @@ class CustomerController {
 
     public function show($id) {
         try {
-            // Customer Info
+
             $stmt = $this->pdo->prepare("SELECT * FROM tb_master_users WHERE id = ? AND role = 'customer'");
             $stmt->execute([$id]);
             $customer = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -67,16 +66,14 @@ class CustomerController {
                 Response::error('Pelanggan tidak ditemukan', 404);
             }
 
-            // Vehicles
-            $stmt = $this->pdo->prepare("SELECT * FROM tb_kendaraan WHERE user_id = ? AND deleted_at IS NULL");
+            $stmt = $this->pdo->prepare("SELECT * FROM tb_mobil WHERE user_id = ? AND deleted_at IS NULL");
             $stmt->execute([$id]);
             $vehicles = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            // Recent Bookings
             $stmt = $this->pdo->prepare("
                 SELECT b.*, k.merk, k.tipe, k.plat_nomor
                 FROM tb_booking b
-                JOIN tb_kendaraan k ON b.kendaraan_id = k.id
+                JOIN tb_mobil k ON b.mobil_id = k.id
                 WHERE b.user_id = ?
                 ORDER BY b.created_at DESC
                 LIMIT 10
@@ -84,7 +81,6 @@ class CustomerController {
             $stmt->execute([$id]);
             $bookings = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            // Stats
             $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM tb_booking WHERE user_id = ?");
             $stmt->execute([$id]);
             $total_booking = $stmt->fetchColumn();
@@ -95,7 +91,7 @@ class CustomerController {
 
             $data = [
                 'customer' => $customer,
-                'vehicles' => $vehicles,
+                'mobil' => $vehicles,
                 'bookings' => $bookings,
                 'stats' => [
                     'total_booking' => $total_booking,
@@ -125,7 +121,7 @@ class CustomerController {
             if ($stmt->rowCount() > 0) {
                 Response::json(['status' => 'success', 'message' => 'Status pelanggan berhasil diperbarui']);
             } else {
-                 // Check if actually exists or status same
+
                  $check = $this->pdo->prepare("SELECT id FROM tb_master_users WHERE id = ?");
                  $check->execute([$id]);
                  if ($check->fetch()) {
@@ -140,12 +136,7 @@ class CustomerController {
     }
 
     public function delete($id) {
-         // Maybe just soft delete or hard delete?
-         // Current requirements seem to point to block/unblock.
-         // But api/index.php has DELETE route.
-         // Let's implement block as DELETE for now? NO, that's confusing.
-         // I'll leave delete unimplemented or hard delete if really requested, but standard usually soft delete.
-         // For now, I'll rely on updateStatus.
+
          Response::error('Not implemented', 501);
     }
 }
